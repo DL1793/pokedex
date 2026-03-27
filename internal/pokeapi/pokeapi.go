@@ -35,12 +35,17 @@ type PokemonResource struct {
 }
 
 type Pokemon struct {
-	Name           string             `json:"name"`
-	Height         int                `json:"height"`
-	Weight         int                `json:"weight"`
-	BaseExperience int                `json:"base_experience"`
-	Stats          []PokemonStats     `json:"stats"`
-	Types          []LocationResource `json:"types"`
+	Name           string         `json:"name"`
+	Height         int            `json:"height"`
+	Weight         int            `json:"weight"`
+	BaseExperience int            `json:"base_experience"`
+	Stats          []PokemonStats `json:"stats"`
+	Types          []PokemonType  `json:"types"`
+}
+
+type PokemonType struct {
+	Slot int              `json:"slot"`
+	Type LocationResource `json:"type"`
 }
 
 type PokemonStats struct {

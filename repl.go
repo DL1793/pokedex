@@ -60,6 +60,11 @@ func getCommands() map[string]cliCommand {
 			description: "Catch pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Show pokemon stats",
+			callback:    commandInspect,
+		},
 	}
 }
 
@@ -152,6 +157,10 @@ func commandExplore(cfg *config) error {
 }
 
 func commandCatch(cfg *config) error {
+	_, ok := cfg.pokedex[cfg.arg]
+	if ok {
+		return errors.New("pokemon already caught")
+	}
 	if cfg.arg == "" {
 		fmt.Println("Usage: catch <pokemon-name>")
 		return errors.New("no pokemon name provided")
@@ -173,6 +182,27 @@ func commandCatch(cfg *config) error {
 		cfg.pokedex[cfg.arg] = pokemon
 		return nil
 	}
+}
+
+func commandInspect(cfg *config) error {
+	_, ok := cfg.pokedex[cfg.arg]
+	if !ok {
+		return errors.New("you have not caught that pokemon")
+	}
+	pokemonStats := cfg.pokedex[cfg.arg].Stats
+	pokemonTypes := cfg.pokedex[cfg.arg].Types
+	fmt.Println("Name: ", cfg.pokedex[cfg.arg].Name)
+	fmt.Println("Height: ", cfg.pokedex[cfg.arg].Height)
+	fmt.Println("Weight: ", cfg.pokedex[cfg.arg].Weight)
+	fmt.Println("Stats: ")
+	for _, stat := range pokemonStats {
+		fmt.Println("  -"+stat.Stat.Name+":", stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, pokeType := range pokemonTypes {
+		fmt.Println("  -", pokeType.Type.Name)
+	}
+	return nil
 }
 
 func startRepl() {
