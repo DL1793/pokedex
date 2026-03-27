@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -24,6 +25,7 @@ type config struct {
 	prevURL       *string
 	pokeapiClient pokeapi.Client
 	arg           string
+	pokedex       map[string]pokeapi.Pokemon
 }
 
 func getCommands() map[string]cliCommand {
@@ -52,6 +54,11 @@ func getCommands() map[string]cliCommand {
 			name:        "explore",
 			description: "Show area pokemon",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Catch pokemon",
+			callback:    commandCatch,
 		},
 	}
 }
@@ -144,6 +151,30 @@ func commandExplore(cfg *config) error {
 	return nil
 }
 
+func commandCatch(cfg *config) error {
+	if cfg.arg == "" {
+		fmt.Println("Usage: catch <pokemon-name>")
+		return errors.New("no pokemon name provided")
+	}
+	pokemon, err := cfg.pokeapiClient.CatchPokemon("https://pokeapi.co/api/v2/pokemon/" + cfg.arg)
+	if err != nil {
+		fmt.Println("Error getting pokemon:", err)
+		return err
+	}
+	fmt.Println("Throwing a Pokeball at " + cfg.arg + "...")
+	var maxDifficulty float32 = 365.0 //Highest base experience - Lowest base experience
+	var catchDifficulty float32 = float32(pokemon.BaseExperience-25) / maxDifficulty
+	catchChance := rand.Float32()
+	if catchChance < catchDifficulty {
+		fmt.Println(cfg.arg + " escaped!")
+		return nil
+	} else {
+		fmt.Println(cfg.arg + " was caught!")
+		cfg.pokedex[cfg.arg] = pokemon
+		return nil
+	}
+}
+
 func startRepl() {
 	cache := pokecache.NewCache(5 * time.Minute)
 	cfg := config{
@@ -153,7 +184,8 @@ func startRepl() {
 			cache,
 			http.Client{},
 		},
-		arg: "",
+		arg:     "",
+		pokedex: make(map[string]pokeapi.Pokemon),
 	}
 	validCommands := getCommands()
 	scanner := bufio.NewScanner(os.Stdin)
